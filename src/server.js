@@ -12,13 +12,13 @@ const app = express();
 //Middlewares
 app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 app.get("/", (req, res) => {
   res.send("CollabFlow Backend server is running");
 });
 
-app.use("/users", userRoutes);
-console.log("User Routes Loaded");
+app.use("/user", userRoutes);
 
 
 const PORT = process.env.PORT || 5000;
