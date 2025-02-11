@@ -2,7 +2,11 @@ const express = require("express");
 const router = express.Router();
 const admin = require("../config/firebase");
 const bcrypt = require("bcryptjs")
+const jwt = require("jsonwebtoken");
+require("dotenv").config();
 
+
+const JWT_SECRET = process.env.JWT_JWT_SECRET;
 const user = require("../models/User");
 
 const { initializeApp } = require("firebase/app");
@@ -21,41 +25,57 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
-const verifyFirebaseToken = require("../middleware/authMiddleware");
+const verifyAuth = require("../middleware/authMiddleware");
 
-router.get("/profile", verifyFirebaseToken, (req, res) => {
-    res.json({ message: "Welcome to CollabFlow!!", user: req.user });
+router.get("/profile", verifyAuth, async (req, res) => {
+   try{
+    const userData = await user.findOne({ where: { email: req.user.email } });
+
+    if(!userData){
+        return res.status(404).json({ message: "User not found"});
+    }
+    res.json({message: "Welcome to CollabFlow", user: userData});
+   }
+   catch(err){
+         res.status(500).json({message: "Profile Error", error: err.message});
+    }
 });
 
 router.post("/signup", async (req, res) => {
     const { email, password, name } = req.body;
 
-    if(!email || !password || !name){
+    if (!email || !password || !name) {
         return res.status(400).json({ message: "Email, Password and Name are required" });
     }
     try {
         const existingUser = await user.findOne({ where: { email } });
-        if(existingUser){
+        if (existingUser) {
             return res.status(400).json({ message: "User already exists" });
         }
         const hashedPassword = await bcrypt.hash(password, 12);
 
         const userRecord = await admin.auth().createUser({
             email,
-            password: hashedPassword,
+            password,
             displayName: name
         });
 
-        const newUser = await user.create({ 
-            firrebaseUid: userRecord.uid,
+        const newUser = await user.create({
+            firebaseUid: userRecord.uid,
             name,
             email,
             password: hashedPassword,
+            role: role || "user",
         });
 
-        const customToken = await admin.auth().createCustomToken(userRecord.uid);
+        const jwtToken = jwt.sign({
+            id: newUser.id,
+            role: newUser.role, email
+        }, process.env.JWT_SECRET, { expiresIn: "3h" });
 
-        return res.status(201).json({ message: "User created successfully", user:newUser,token: customToken });
+        const firebaseToken = await admin.auth().createCustomToken(userRecord.uid);
+
+        return res.status(201).json({ message: "User created successfully", user: newUser, firebaseToken, jwtToken });
 
 
     } catch (error) {
@@ -65,19 +85,40 @@ router.post("/signup", async (req, res) => {
 
 router.post("/login", async (req, res) => {
     const { email, password } = req.body;
-    if(!email || !password){
+
+    if (!email || !password) {
         return res.status(400).json({ message: "Email and Password are required" });
     }
     try {
-       const userCredential = await admin.auth().getUserByEmail(email);
+        const userCredential = await admin.auth().getUserByEmail(email);
 
-       if(!userCredential){
-           return res.status(401).json({ message: "User not found" });
-       }
+        if (!userCredential) {
+            return res.status(401).json({ message: "User not found" });
+        }
 
-       const customToken = await admin.auth().createCustomToken(userCredential.uid);
+        const existingUser = await user.findOne({ where: { email } });
 
-       return res.status(200).json({ message: "Login Successful", token: customToken });
+        if (!existingUser) {
+            return res.status(401).json({ message: "User not found in DB" });
+        }
+
+        const isMatch = await bcrypt.compare(password, existingUser.password);
+
+        if (!isMatch) {
+            return res.status(401).json({ message: "Invalid Credentials" });
+        }
+
+        const firebaseToken = await admin.auth().createCustomToken(userCredential.uid);
+
+        const jwtToken = jwt.sign({ id: existingUser.id, role: existingUser.role, email }, process.env.JWT_SECRET, { expiresIn: "3h" });
+
+        return res.status(200).json({ message: "Login Successful", user: existingUser, firebaseToken, jwtToken });
+
+
+
+
+
+
     } catch (err) {
         res.status(500).json({ message: "Login Error", error: err.message });
     }

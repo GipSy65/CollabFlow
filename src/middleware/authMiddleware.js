@@ -1,18 +1,24 @@
 
 const admin = require("../config/firebase")
+const jwt = require("jsonwebtoken");
 
-const verifyFirebaseToken = async (req, res, next) => {
+const verifyAuth = async (req, res, next) => {
     const token = req.headers.authorization?.split("Bearer ")[1];
 
     if (!token) {
         return res.status(401).json({ message: "Unauthorized - No Token Provided"});
     }try{
-        const decodedToken = await admin.auth().verifyIdToken(token);
-
-        const currentTime = Math.floor(Date.now() / 1000);
-        if (decodedToken.exp < currentTime) {
-            return res.status(401).json({ message: "Token Expired"});
+        let decoded;
+        try{
+            decoded = jwt.verify(token, process.env.JWT_SECRET);
+            req.user = decoded;
+            return next();
         }
+        catch(jwtError){
+            console.error("JWT Verification error", err.message);
+        }
+
+        const decodedToken = await admin.auth().verifyIdToken(token);
         req.user = decodedToken;
         next();
     }catch(err){
@@ -21,4 +27,4 @@ const verifyFirebaseToken = async (req, res, next) => {
     }
 };
 
-module.exports = verifyFirebaseToken;
+module.exports = verifyAuth;
