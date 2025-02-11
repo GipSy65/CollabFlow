@@ -1,6 +1,9 @@
 const express = require("express");
 const router = express.Router();
 const admin = require("../config/firebase");
+const bcrypt = require("bcryptjs")
+
+const user = require("../models/User");
 
 const { initializeApp } = require("firebase/app");
 const { getAuth, signInWithEmailAndPassword } = require("firebase/auth");
@@ -25,19 +28,36 @@ router.get("/profile", verifyFirebaseToken, (req, res) => {
 });
 
 router.post("/signup", async (req, res) => {
-    const { email, password } = req.body;
+    const { email, password, name } = req.body;
 
-    if(!email || !password){
-        return res.status(400).json({ message: "Email and Password are required" });
+    if(!email || !password || !name){
+        return res.status(400).json({ message: "Email, Password and Name are required" });
     }
     try {
+        const existingUser = await user.findOne({ where: { email } });
+        if(existingUser){
+            return res.status(400).json({ message: "User already exists" });
+        }
+        const hashedPassword = await bcrypt.hash(password, 12);
+
         const userRecord = await admin.auth().createUser({
             email,
-            password,
+            password: hashedPassword,
+            displayName: name
         });
+
+        const newUser = await user.create({ 
+            firrebaseUid: userRecord.uid,
+            name,
+            email,
+            password: hashedPassword,
+        });
+
         const customToken = await admin.auth().createCustomToken(userRecord.uid);
 
-        return res.status(201).json({ message: "User Created Successfully", user: userRecord , token: customToken });
+        return res.status(201).json({ message: "User created successfully", user:newUser,token: customToken });
+
+
     } catch (error) {
         res.status(500).json({ message: "Signup Error", error: error.message });
     }
