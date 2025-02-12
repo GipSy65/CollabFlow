@@ -22,7 +22,7 @@ app.get("/", (req, res) => {
 
 app.use("/user", userRoutes);
 
-sequelize.sync({force:false}).then(() => {
+sequelize.sync({ force: false }).then(() => {
   console.log("Database Synced");
 }).catch((err) => {
   console.error("Error syncing database", err);

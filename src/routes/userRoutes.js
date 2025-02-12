@@ -28,16 +28,16 @@ const auth = getAuth(app);
 const verifyAuth = require("../middleware/authMiddleware");
 
 router.get("/profile", verifyAuth, async (req, res) => {
-   try{
-    const userData = await user.findOne({ where: { email: req.user.email } });
+    try {
+        const userData = await user.findOne({ where: { email: req.user.email } });
 
-    if(!userData){
-        return res.status(404).json({ message: "User not found"});
+        if (!userData) {
+            return res.status(404).json({ message: "User not found" });
+        }
+        res.json({ message: "Welcome to CollabFlow", user: userData });
     }
-    res.json({message: "Welcome to CollabFlow", user: userData});
-   }
-   catch(err){
-         res.status(500).json({message: "Profile Error", error: err.message});
+    catch (err) {
+        res.status(500).json({ message: "Profile Error", error: err.message });
     }
 });
 
