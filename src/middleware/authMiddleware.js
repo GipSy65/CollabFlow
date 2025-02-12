@@ -1,7 +1,7 @@
 
 const admin = require("../config/firebase")
 const jwt = require("jsonwebtoken");
-
+require("dotenv").config();
 const verifyAuth = async (req, res, next) => {
     const token = req.headers.authorization?.split("Bearer ")[1];
 
@@ -15,7 +15,7 @@ const verifyAuth = async (req, res, next) => {
             return next();
         }
         catch (jwtError) {
-            console.error("JWT Verification error", err.message);
+            console.error("JWT Verification error", jwtError.message);
         }
 
         const decodedToken = await admin.auth().verifyIdToken(token);

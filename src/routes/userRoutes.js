@@ -5,12 +5,17 @@ const bcrypt = require("bcryptjs")
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
 
+const roleMiddleware = require("../middleware/roleMiddleware");
 
-const JWT_SECRET = process.env.JWT_JWT_SECRET;
+
 const user = require("../models/User");
+const verifyAuth = require("../middleware/authMiddleware");
+
 
 const { initializeApp } = require("firebase/app");
 const { getAuth, signInWithEmailAndPassword } = require("firebase/auth");
+const JWT_SECRET = process.env.JWT_SECRET;
+
 
 const firebaseConfig = {
     apiKey: process.env.FIREBASE_API_KEY,
@@ -25,7 +30,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
-const verifyAuth = require("../middleware/authMiddleware");
 
 router.get("/profile", verifyAuth, async (req, res) => {
     try {
@@ -42,7 +46,7 @@ router.get("/profile", verifyAuth, async (req, res) => {
 });
 
 router.post("/signup", async (req, res) => {
-    const { email, password, name } = req.body;
+    const { email, password, name,role } = req.body;
 
     if (!email || !password || !name) {
         return res.status(400).json({ message: "Email, Password and Name are required" });
@@ -113,12 +117,6 @@ router.post("/login", async (req, res) => {
         const jwtToken = jwt.sign({ id: existingUser.id, role: existingUser.role, email }, process.env.JWT_SECRET, { expiresIn: "3h" });
 
         return res.status(200).json({ message: "Login Successful", user: existingUser, firebaseToken, jwtToken });
-
-
-
-
-
-
     } catch (err) {
         res.status(500).json({ message: "Login Error", error: err.message });
     }
