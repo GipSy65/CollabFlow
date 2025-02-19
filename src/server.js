@@ -5,6 +5,7 @@ const sequelize = require("./config/database");
 const user = require("./models/User");
 
 const userRoutes = require("./routes/userRoutes");
+const taskRoutes = require("./routes/taskRoutes");
 
 
 const app = express();
@@ -21,6 +22,7 @@ app.get("/", (req, res) => {
 });
 
 app.use("/user", userRoutes);
+app.use("/task", taskRoutes);
 
 sequelize.sync({ force: false }).then(() => {
   console.log("Database Synced");

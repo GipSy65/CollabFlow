@@ -1,22 +1,13 @@
-const { v4: uuidv4 } = require("uuid");
+'use strict';
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
     await queryInterface.createTable("Tasks", {
       id: {
         type: Sequelize.UUID,
+        defaultValue: Sequelize.UUIDV4,
         allowNull: false,
         primaryKey: true,
-        defaultValue: uuidv4(),
-      },
-      projectId: {
-        type: Sequelize.UUID,
-        allowNull: false,
-        references: {
-          model: "Projects",
-          key: "id",
-        },
-        onDelete: "CASCADE",
       },
       title: {
         type: Sequelize.STRING,
@@ -27,9 +18,22 @@ module.exports = {
         allowNull: true,
       },
       status: {
-        type: Sequelize.ENUM("Pending", "In Progress", "Completed"),
-        defaultValue: "Pending",
+        type: Sequelize.ENUM("pending", "in_progress", "completed", "on_hold", "cancelled"),
         allowNull: false,
+        defaultValue: "pending",
+      },
+      projectId: {
+        type: Sequelize.UUID,
+        allowNull: false,
+        references: {
+          model: "Projects",
+          key: "id",
+        },
+        onDelete: "CASCADE",
+      },
+      assignedTo: {
+        type: Sequelize.UUID,
+        allowNull: true,
       },
       createdAt: {
         type: Sequelize.DATE,

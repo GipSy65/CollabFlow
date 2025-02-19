@@ -20,6 +20,10 @@ const Task = sequelize.define("Task", {
         type: DataTypes.ENUM("pending", "in_progress", "completed", "on_hold", "cancelled"),
         defaultValue: "pending",
     },
+    priority: {
+        type: DataTypes.ENUM("low", "medium", "high", "urgent"),  // NEW FIELD
+        defaultValue: "medium",
+    },
     projectId: {
         type: DataTypes.UUID,
         allowNull: false,

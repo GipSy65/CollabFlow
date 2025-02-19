@@ -7,10 +7,14 @@ module.exports = {
         type: Sequelize.UUID,
         allowNull: false,
         primaryKey: true,
-        defaultValue: uuidv4(), // Generate UUID in Node.js instead of MySQL
+        defaultValue: Sequelize.UUIDV4, 
       },
       name: {
         type: Sequelize.STRING,
+        allowNull: false,
+      },
+      ownerId: {
+        type: Sequelize.UUID,
         allowNull: false,
       },
       description: {
@@ -18,7 +22,7 @@ module.exports = {
         allowNull: true,
       },
       status: {
-        type: Sequelize.ENUM("Pending", "In Progress", "Completed"),
+        type: Sequelize.ENUM("Pending", "In Progress", "Completed","on_hold"),
         defaultValue: "Pending",
         allowNull: false,
       },

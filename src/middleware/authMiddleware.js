@@ -2,6 +2,7 @@
 const admin = require("../config/firebase")
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
+
 const verifyAuth = async (req, res, next) => {
     const token = req.headers.authorization?.split("Bearer ")[1];
 
@@ -17,10 +18,15 @@ const verifyAuth = async (req, res, next) => {
         catch (jwtError) {
             console.error("JWT Verification error", jwtError.message);
         }
+        try {
+            const decodedToken = await admin.auth().verifyIdToken(token);
+            req.user = decodedToken; 
+            return next();
+        } catch (firebaseError) {
+            console.warn("Firebase token verification failed:", firebaseError.message);
+        }
 
-        const decodedToken = await admin.auth().verifyIdToken(token);
-        req.user = decodedToken;
-        next();
+        return res.status(403).json({ message: "Invalid or Expired Token" });
     } catch (err) {
         console.error("Token Verification error", err.message);
         return res.status(403).json({ message: "Invalid or Expired Token" });
