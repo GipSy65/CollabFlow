@@ -1,29 +1,17 @@
-const { io } = require("socket.io-client");
-
-
+const io = require("socket.io-client");
 const socket = io("http://localhost:5000");
 
 socket.on("connect", () => {
-    console.log("Connected to WebSocket server ");
-
-    
-    socket.on("newTask", (task) => {
-        console.log("New Task Created:", task);
-    });
-
-    socket.on("taskUpdated", (task) => {
-        console.log("Task Updated:", task);
-    });
-
-    socket.on("taskAssigned", (data) => {
-        console.log("Task Assigned:", data);
-    });
-
-    socket.on("taskDeleted", (taskId) => {
-        console.log("Task Deleted:", taskId);
-    });
+    console.log(" Connected to Socket.io server!", socket.id);
 });
 
 socket.on("disconnect", () => {
-    console.log("Disconnected from WebSocket server ");
+    console.log("Disconnected from server");
 });
+
+socket.on("serverMessage", (msg) => {
+    console.log("Message from server:", msg);
+});
+
+// Send a test event
+socket.emit("testEvent", { message: "Hello from client!" });

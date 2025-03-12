@@ -1,14 +1,18 @@
 const socketIo = require("socket.io");
 const { get } = require("../routes/userRoutes");
 
-let io; 
+let io;
 
 function initializeSocket(server) {
     io = socketIo(server, {
         cors: {
             origin: "*",
+            methods: ["GET", "POST"],
+            credentials: true
         },
+        transports: ['websocket', 'polling'],
     });
+    console.log("Socket.io initialized");
 
     io.on("connection", (socket) => {
         console.log("A user connected:", socket.id);
@@ -38,6 +42,7 @@ function initializeSocket(server) {
         });
     });
 }
+
 const getSocketIo = () => {
     if (!io) {
         throw new Error("Socket.io not initialized");
@@ -45,4 +50,4 @@ const getSocketIo = () => {
     return io;
 };
 
-module.exports = { initializeSocket,getSocketIo };
+module.exports = { initializeSocket, getSocketIo };

@@ -17,7 +17,6 @@ const projectRoutes = require("./routes/projectRoutes");
 const app = express();
 const server = http.createServer(app);
 
-initializeSocket(server);
 
 
 //Middlewares
@@ -31,8 +30,8 @@ app.use(
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
-        scriptSrc: ["'self'"],
-        connectSrc: ["'self'", "ws://localhost:5000"],
+        scriptSrc: ["'self'", "'unsafe-inline'"],
+        connectSrc: ["'self'", "'self'", "ws://localhost:5000", "wss://localhost:5000", "localhost:5000"],
       },
     },
   })
@@ -53,12 +52,12 @@ sequelize.sync({ force: false }).then(() => {
   console.error("Error syncing database", err);
 });
 
+initializeSocket(server);
 
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
-
-
+  console.log(`Socket.IO server running on ws://localhost:${PORT}`);
 });
 
 module.exports = app;
