@@ -1,0 +1,5 @@
+src/config/collabFlow.json
+node_modules/
+.env
+config/
+README.md
