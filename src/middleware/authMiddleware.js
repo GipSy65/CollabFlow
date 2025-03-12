@@ -20,12 +20,11 @@ const verifyAuth = async (req, res, next) => {
         }
         try {
             const decodedToken = await admin.auth().verifyIdToken(token);
-            req.user = decodedToken; 
+            req.user = decodedToken;
             return next();
         } catch (firebaseError) {
             console.warn("Firebase token verification failed:", firebaseError.message);
         }
-
         return res.status(403).json({ message: "Invalid or Expired Token" });
     } catch (err) {
         console.error("Token Verification error", err.message);
